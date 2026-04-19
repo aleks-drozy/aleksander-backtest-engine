@@ -1,0 +1,50 @@
+name: Weekly Backtest Refresh
+
+on:
+  schedule:
+    # Every Friday at 18:00 UTC — after US market close, fresh weekly data
+    - cron: '0 18 * * 5'
+  workflow_dispatch:   # allow manual trigger from GitHub UI
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push the updated results JSON
+
+    steps:
+      - name: Checkout engine repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run all strategies
+        run: python run_all.py
+
+      - name: Run test suite
+        run: python -m pytest tests/ -v --tb=short
+
+      - name: Commit updated results
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/backtest_results.json
+          git diff --staged --quiet || git commit -m "chore: auto-refresh backtest results $(date -u +%Y-%m-%d) [skip ci]"
+          git push
+
+      # ── Optional: trigger portfolio redeploy ──────────────────────────────
+      # Uncomment and add PORTFOLIO_DEPLOY_HOOK to repo secrets to auto-update
+      # the Vercel/Netlify portfolio after results are refreshed.
+      #
+      # - name: Trigger portfolio redeploy
+      #   if: success()
+      #   run: curl -X POST "${{ secrets.PORTFOLIO_DEPLOY_HOOK }}"

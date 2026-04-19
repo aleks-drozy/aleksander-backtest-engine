@@ -4,64 +4,73 @@ from engine.base_strategy import Strategy
 
 class OpeningRangeBreakoutStrategy(Strategy):
     """
-    Opening Range Breakout (ORB) on 1-hour bars, US cash session (09:30-16:00 ET).
+    Volume-Confirmed Opening Range Breakout (ORB) on 1-hour bars.
 
     Opening Range: high and low of the very first bar each day (09:30-10:30).
-    Entry: go long on the first bar that closes ABOVE the OR high;
-           go short on the first bar that closes BELOW the OR low.
-    One trade per day; position is held until session close (last bar set to 0).
-    ATR stop-loss applied by the backtester to limit runaway losers.
 
-    Directional edge: intraday momentum tends to continue in the direction of the
-    opening break (established by the first hour's range).
+    Entry: first bar that closes ABOVE the OR high AND whose volume exceeds
+           vol_mult × the average volume of the OR bar(s).  Confirmed breakouts
+           have institutional participation; unconfirmed ones are fakeouts ~50%.
+
+    Short entry mirrors the long: close below OR low with volume confirmation.
+
+    One trade per day; position held to session close (last bar forced to 0).
+    ATR stop-loss applied by backtester for runaway-gap protection.
     """
 
     id = "ORB"
     name = "Opening Range Breakout"
     description = (
-        "Trades the breakout above/below the first 1h bar's high/low each session. "
+        "Trades volume-confirmed breakouts above/below the first 1h bar each session. "
+        "Volume must exceed 1.5x OR-bar average to confirm institutional participation. "
         "One trade per day; held to close. Captures intraday momentum on NQ futures."
     )
     direction = "both"
-    params = {"or_bars": 1}
+    params = {"or_bars": 1, "vol_mult": 1.5}
 
-    # 2x ATR stop to protect against gap reversals; let momentum run to session close
     sl_atr_mult: float = 2.0
     tp_atr_mult: float | None = None
     atr_period: int = 14
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         signals = pd.Series(0.0, index=df.index)
+        has_volume = "Volume" in df.columns and df["Volume"].notna().any()
 
-        # Group bars by calendar date
         dates = df.index.normalize()
         unique_dates = dates.unique()
 
         for date in unique_dates:
             day_idx = df.index[dates == date]
-
-            # Need at least the OR bar + 1 signal bar
             if len(day_idx) < 2:
                 continue
 
-            # Opening range: high/low of the first bar
             or_high = float(df.loc[day_idx[0], "High"])
-            or_low = float(df.loc[day_idx[0], "Low"])
+            or_low  = float(df.loc[day_idx[0], "Low"])
 
-            trade_dir = 0.0  # track direction taken this session
+            # Average volume of the opening range bar(s) — used for confirmation
+            or_vol_avg = float(df.loc[day_idx[0], "Volume"]) if has_volume else 0.0
 
-            # Signal bars start from bar index 1 (after the OR bar)
+            trade_dir = 0.0
+
             for bar_idx in day_idx[1:]:
                 if trade_dir == 0.0:
                     close = float(df.loc[bar_idx, "Close"])
-                    if close > or_high:
-                        trade_dir = 1.0   # breakout long
-                    elif close < or_low:
-                        trade_dir = -1.0  # breakdown short
+
+                    # Volume confirmation: breakout bar must have elevated volume
+                    if has_volume and or_vol_avg > 0:
+                        bar_vol = float(df.loc[bar_idx, "Volume"])
+                        vol_ok = bar_vol >= self.params["vol_mult"] * or_vol_avg
+                    else:
+                        vol_ok = True  # no volume data → skip confirmation
+
+                    if close > or_high and vol_ok:
+                        trade_dir = 1.0
+                    elif close < or_low and vol_ok:
+                        trade_dir = -1.0
+
                 signals.loc[bar_idx] = trade_dir
 
-            # Force flat on the last bar of the day so position
-            # closes at the session-close bar's return
+            # Force flat at session close
             signals.loc[day_idx[-1]] = 0.0
 
         return signals
