@@ -23,4 +23,8 @@ class SMACrossoverStrategy(Strategy):
         signals[fast > slow] = 1.0
         signals[fast < slow] = -1.0
         signals[fast.isna() | slow.isna()] = 0.0
+
+        # ADX regime filter: only trade trend-following in trending markets (ADX > 25)
+        adx = self.compute_adx(df)
+        signals = signals.where(adx > 25, 0.0)
         return signals

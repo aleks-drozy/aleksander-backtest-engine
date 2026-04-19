@@ -10,6 +10,8 @@ class EquityPoint(BaseModel):
 class Metrics(BaseModel):
     total_return_pct: float
     sharpe: float
+    sortino: float
+    calmar: float
     max_drawdown_pct: float
     win_rate_pct: float
     profit_factor: float
@@ -42,4 +44,5 @@ class StrategyResult(BaseModel):
 class BacktestResults(BaseModel):
     generated_at: str
     asset_universe: dict[str, str]
+    benchmark_return_pct: float   # NQ buy-and-hold over the OOS window
     strategies: list[StrategyResult]

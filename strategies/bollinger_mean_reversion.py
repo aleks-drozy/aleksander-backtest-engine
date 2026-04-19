@@ -46,4 +46,7 @@ class BollingerMeanReversionStrategy(Strategy):
 
             signals.iloc[i] = position
 
+        # ADX regime filter: only trade mean reversion in ranging markets (ADX < 25)
+        adx = self.compute_adx(df)
+        signals = signals.where(adx < 25, 0.0)
         return signals
