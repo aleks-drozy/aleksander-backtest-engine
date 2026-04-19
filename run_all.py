@@ -11,10 +11,10 @@ from strategies.ifvg_cisd import IFVGCISDStrategy
 from strategies.rsi_mean_reversion import RSIMeanReversionStrategy
 from strategies.sma_crossover import SMACrossoverStrategy
 
-# 1h data on yfinance has a rolling 730-day window; compute start dynamically
-INTERVAL = "1h"
+# 15m data on yfinance has a rolling 60-day window; compute start dynamically
+INTERVAL = "15m"
 END = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-START = (datetime.now(timezone.utc) - timedelta(days=720)).strftime("%Y-%m-%d")
+START = (datetime.now(timezone.utc) - timedelta(days=58)).strftime("%Y-%m-%d")
 
 REGISTRY = [
     (SMACrossoverStrategy(), "NQ=F"),
