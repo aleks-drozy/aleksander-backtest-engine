@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI: fetch data, run all strategies, validate output, write results JSON."""
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from data.fetcher import fetch_ohlcv
@@ -11,12 +11,14 @@ from strategies.ifvg_cisd import IFVGCISDStrategy
 from strategies.rsi_mean_reversion import RSIMeanReversionStrategy
 from strategies.sma_crossover import SMACrossoverStrategy
 
-START = "2018-01-01"
-END = "2025-12-31"
+# 1h data on yfinance has a rolling 730-day window; compute start dynamically
+INTERVAL = "1h"
+END = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+START = (datetime.now(timezone.utc) - timedelta(days=720)).strftime("%Y-%m-%d")
 
 REGISTRY = [
-    (SMACrossoverStrategy(), "SPY"),
-    (RSIMeanReversionStrategy(), "SPY"),
+    (SMACrossoverStrategy(), "NQ=F"),
+    (RSIMeanReversionStrategy(), "NQ=F"),
     (IFVGCISDStrategy(), "NQ=F"),
 ]
 
@@ -26,8 +28,8 @@ def main() -> None:
     asset_universe: dict[str, str] = {}
 
     for strategy, ticker in REGISTRY:
-        print(f"Running {strategy.name} on {ticker}...")
-        df = fetch_ohlcv(ticker, START, END)
+        print(f"Running {strategy.name} on {ticker} [{INTERVAL}]...")
+        df = fetch_ohlcv(ticker, START, END, INTERVAL)
         result = Backtester(strategy).run(df)
         strategy_results.append(result)
         asset_universe[result["id"]] = ticker
