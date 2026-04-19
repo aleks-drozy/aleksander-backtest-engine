@@ -11,6 +11,76 @@ class Backtester:
         self.strategy = strategy
         self.train_pct = train_pct
 
+    @staticmethod
+    def _compute_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
+        """Average True Range — adapts stop/target levels to current volatility."""
+        high, low, close = df["High"], df["Low"], df["Close"]
+        prev_close = close.shift(1)
+        tr = pd.concat([
+            high - low,
+            (high - prev_close).abs(),
+            (low - prev_close).abs(),
+        ], axis=1).max(axis=1)
+        return tr.ewm(span=period, adjust=False).mean()
+
+    @staticmethod
+    def _apply_sl_tp(
+        signals: pd.Series,
+        prices: pd.Series,
+        atr: pd.Series,
+        sl_mult: float,
+        tp_mult: float | None,
+    ) -> pd.Series:
+        """
+        Enforce ATR-based stop-loss and optional take-profit on a signal series.
+        Exits early when SL/TP is hit, overriding the strategy's natural exit bar.
+        SL/TP distances are in price units: sl_mult × ATR and tp_mult × ATR.
+        """
+        pos = pd.Series(0.0, index=signals.index)
+        entry_price: float | None = None
+        entry_dir: float = 0.0
+
+        for i in range(len(signals)):
+            sig = float(signals.iloc[i])
+            price = float(prices.iloc[i])
+            a = float(atr.iloc[i])
+
+            if pd.isna(a):
+                pos.iloc[i] = entry_dir
+                continue
+
+            # Check SL / TP on open position
+            if entry_dir != 0.0 and entry_price is not None:
+                pnl_pts = (price - entry_price) * entry_dir  # positive = in profit
+
+                if pnl_pts <= -(sl_mult * a):          # stop-loss hit
+                    entry_dir = 0.0
+                    entry_price = None
+                    pos.iloc[i] = 0.0
+                    continue
+
+                if tp_mult is not None and pnl_pts >= tp_mult * a:  # take-profit hit
+                    entry_dir = 0.0
+                    entry_price = None
+                    pos.iloc[i] = 0.0
+                    continue
+
+            # Process signal
+            if entry_dir == 0.0:
+                if sig != 0.0:                  # new entry
+                    entry_dir = sig
+                    entry_price = price
+            elif sig == 0.0:                    # strategy says exit
+                entry_dir = 0.0
+                entry_price = None
+            elif sig != entry_dir:              # direction flip
+                entry_dir = sig
+                entry_price = price
+
+            pos.iloc[i] = entry_dir
+
+        return pos
+
     def run(self, df: pd.DataFrame) -> dict:
         signals = self.strategy.generate_signals(df)
 
@@ -18,6 +88,14 @@ class Backtester:
             signals = signals.clip(lower=0)
         elif self.strategy.direction == "short_only":
             signals = signals.clip(upper=0)
+
+        # Apply ATR-based stop-loss / take-profit before shifting into positions
+        atr = self._compute_atr(df, self.strategy.atr_period)
+        signals = self._apply_sl_tp(
+            signals, df["Close"], atr,
+            self.strategy.sl_atr_mult,
+            self.strategy.tp_atr_mult,
+        )
 
         # Enter position on next bar to avoid lookahead bias
         pos = signals.shift(1).fillna(0)

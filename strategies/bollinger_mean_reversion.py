@@ -12,6 +12,9 @@ class BollingerMeanReversionStrategy(Strategy):
     )
     direction = "long_only"
     params = {"period": 20, "std_dev": 1.5}
+    # Mid-band reversion is the natural TP; wide stop only for catastrophic gap moves
+    sl_atr_mult = 10.0
+    tp_atr_mult = None
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         close = df["Close"]
