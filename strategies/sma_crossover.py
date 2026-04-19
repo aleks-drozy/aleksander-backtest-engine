@@ -6,9 +6,9 @@ class SMACrossoverStrategy(Strategy):
     id = "SMA_CROSSOVER"
     name = "SMA Crossover"
     description = (
-        "Goes long when a fast SMA crosses above a slow SMA; exits when the cross reverses."
+        "Goes long when fast SMA crosses above slow SMA; short when it crosses below."
     )
-    direction = "long_only"
+    direction = "both"
     params = {"fast": 20, "slow": 50}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
@@ -17,5 +17,6 @@ class SMACrossoverStrategy(Strategy):
 
         signals = pd.Series(0.0, index=df.index)
         signals[fast > slow] = 1.0
+        signals[fast < slow] = -1.0
         signals[fast.isna() | slow.isna()] = 0.0
         return signals

@@ -15,10 +15,10 @@ def test_sma_crossover_signals_valid_values():
     assert len(signals) == len(df)
 
 
-def test_sma_crossover_is_long_only():
+def test_sma_crossover_supports_both_directions():
     from strategies.sma_crossover import SMACrossoverStrategy
     s = SMACrossoverStrategy()
-    assert s.direction == "long_only"
+    assert s.direction == "both"
 
 
 def test_sma_crossover_golden_cross_produces_long():
@@ -48,10 +48,10 @@ def test_rsi_mean_reversion_signals_valid_values():
     assert len(signals) == len(df)
 
 
-def test_rsi_mean_reversion_is_long_only():
+def test_rsi_mean_reversion_supports_both_directions():
     from strategies.rsi_mean_reversion import RSIMeanReversionStrategy
     s = RSIMeanReversionStrategy()
-    assert s.direction == "long_only"
+    assert s.direction == "both"
 
 
 def test_rsi_mean_reversion_fires_on_oversold():
