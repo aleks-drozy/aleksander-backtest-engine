@@ -7,26 +7,32 @@ class RSIMeanReversionStrategy(Strategy):
     id = "RSI_MEAN_REVERSION"
     name = "RSI Mean Reversion"
     description = (
-        "Enters long when RSI crosses above the oversold threshold; "
-        "exits when RSI crosses above the overbought threshold."
+        "Long when RSI dips below oversold; short when RSI spikes above overbought. "
+        "Exits when RSI reverts to the opposite threshold."
     )
-    direction = "long_only"
+    direction = "both"
     params = {"period": 14, "oversold": 30, "overbought": 70}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         rsi = self._rsi(df["Close"], self.params["period"])
 
-        in_position = False
+        position = 0.0  # 0 = flat, 1 = long, -1 = short
         signals = pd.Series(0.0, index=df.index)
 
         for i in range(len(df)):
             if pd.isna(rsi.iloc[i]):
                 continue
-            if not in_position and rsi.iloc[i] < self.params["oversold"]:
-                in_position = True
-            elif in_position and rsi.iloc[i] > self.params["overbought"]:
-                in_position = False
-            signals.iloc[i] = 1.0 if in_position else 0.0
+            r = rsi.iloc[i]
+            if position == 0.0:
+                if r < self.params["oversold"]:
+                    position = 1.0   # enter long on oversold dip
+                elif r > self.params["overbought"]:
+                    position = -1.0  # enter short on overbought spike
+            elif position == 1.0 and r > self.params["overbought"]:
+                position = 0.0       # exit long when overbought
+            elif position == -1.0 and r < self.params["oversold"]:
+                position = 0.0       # exit short when oversold
+            signals.iloc[i] = position
 
         return signals
 
