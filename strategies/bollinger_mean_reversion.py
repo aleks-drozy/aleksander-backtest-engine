@@ -6,11 +6,12 @@ class BollingerMeanReversionStrategy(Strategy):
     id = "BOLLINGER_MEAN_REVERSION"
     name = "Bollinger Mean Reversion"
     description = (
-        "Long when price dips below the lower Bollinger Band; short when it spikes above "
-        "the upper band. Exits when price reverts to the middle band (20-period SMA)."
+        "Buys NQ dips below the lower Bollinger Band and exits at the middle band. "
+        "Long-only to capitalise on NQ's tendency to recover from oversold dips. "
+        "Uses 1.5σ bands on 1h for sufficient trade frequency."
     )
-    direction = "both"
-    params = {"period": 20, "std_dev": 2}
+    direction = "long_only"
+    params = {"period": 20, "std_dev": 1.5}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         close = df["Close"]

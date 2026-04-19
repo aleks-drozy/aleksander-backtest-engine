@@ -6,10 +6,11 @@ class SMACrossoverStrategy(Strategy):
     id = "SMA_CROSSOVER"
     name = "SMA Crossover"
     description = (
-        "Goes long when fast SMA crosses above slow SMA; short when it crosses below."
+        "Golden cross on hourly NQ: long when 50-bar SMA crosses above 200-bar SMA; "
+        "flat when it crosses below. Long-only to align with NQ's structural uptrend."
     )
-    direction = "both"
-    params = {"fast": 20, "slow": 50}
+    direction = "long_only"
+    params = {"fast": 50, "slow": 200}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         fast = df["Close"].rolling(self.params["fast"]).mean()

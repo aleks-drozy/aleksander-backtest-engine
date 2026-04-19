@@ -7,11 +7,12 @@ class RSIMeanReversionStrategy(Strategy):
     id = "RSI_MEAN_REVERSION"
     name = "RSI Mean Reversion"
     description = (
-        "Long when RSI dips below oversold; short when RSI spikes above overbought. "
-        "Exits when RSI reverts to the opposite threshold."
+        "Long when RSI dips below 35; short when RSI spikes above 65. "
+        "Exits when RSI reverts to the opposite threshold. "
+        "Wider thresholds than classic 30/70 to generate meaningful trade frequency on 1h NQ."
     )
     direction = "both"
-    params = {"period": 14, "oversold": 30, "overbought": 70}
+    params = {"period": 14, "oversold": 35, "overbought": 65}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         rsi = self._rsi(df["Close"], self.params["period"])
