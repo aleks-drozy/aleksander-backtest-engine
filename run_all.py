@@ -7,7 +7,10 @@ from pathlib import Path
 from data.fetcher import fetch_ohlcv
 from engine.backtester import Backtester
 from schemas import BacktestResults
+from strategies.bollinger_mean_reversion import BollingerMeanReversionStrategy
 from strategies.ifvg_cisd import IFVGCISDStrategy
+from strategies.macd_bollinger_combo import MACDBollingerComboStrategy
+from strategies.macd_crossover import MACDCrossoverStrategy
 from strategies.rsi_mean_reversion import RSIMeanReversionStrategy
 from strategies.sma_crossover import SMACrossoverStrategy
 
@@ -20,6 +23,9 @@ REGISTRY = [
     (SMACrossoverStrategy(), "NQ=F"),
     (RSIMeanReversionStrategy(), "NQ=F"),
     (IFVGCISDStrategy(), "NQ=F"),
+    (MACDCrossoverStrategy(), "NQ=F"),
+    (BollingerMeanReversionStrategy(), "NQ=F"),
+    (MACDBollingerComboStrategy(), "NQ=F"),
 ]
 
 
