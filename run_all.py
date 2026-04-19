@@ -14,18 +14,19 @@ from strategies.macd_crossover import MACDCrossoverStrategy
 from strategies.rsi_mean_reversion import RSIMeanReversionStrategy
 from strategies.sma_crossover import SMACrossoverStrategy
 
-# 15m data on yfinance has a rolling 60-day window; compute start dynamically
-INTERVAL = "15m"
-END = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-START = (datetime.now(timezone.utc) - timedelta(days=58)).strftime("%Y-%m-%d")
+# yfinance rolling window limits per interval
+INTERVAL_WINDOW_DAYS = {"1h": 720, "30m": 58, "15m": 58}
 
+END = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+# (strategy, ticker, interval) — each strategy runs on its research-optimal timeframe
 REGISTRY = [
-    (SMACrossoverStrategy(), "NQ=F"),
-    (RSIMeanReversionStrategy(), "NQ=F"),
-    (IFVGCISDStrategy(), "NQ=F"),
-    (MACDCrossoverStrategy(), "NQ=F"),
-    (BollingerMeanReversionStrategy(), "NQ=F"),
-    (MACDBollingerComboStrategy(), "NQ=F"),
+    (SMACrossoverStrategy(),         "NQ=F", "1h"),   # trend-following needs clean trends
+    (RSIMeanReversionStrategy(),     "NQ=F", "30m"),  # sweet spot: active but lower noise
+    (IFVGCISDStrategy(),             "NQ=F", "15m"),  # ICT concepts native to 15m
+    (MACDCrossoverStrategy(),        "NQ=F", "1h"),   # profit factor 1.21 at 1h vs 1.14 at 30m
+    (BollingerMeanReversionStrategy(),"NQ=F","15m"),  # mean reversion viable at 15m
+    (MACDBollingerComboStrategy(),   "NQ=F", "15m"),  # dual confirmation handles 15m noise
 ]
 
 
@@ -33,10 +34,13 @@ def main() -> None:
     strategy_results = []
     asset_universe: dict[str, str] = {}
 
-    for strategy, ticker in REGISTRY:
-        print(f"Running {strategy.name} on {ticker} [{INTERVAL}]...")
-        df = fetch_ohlcv(ticker, START, END, INTERVAL)
+    for strategy, ticker, interval in REGISTRY:
+        window = INTERVAL_WINDOW_DAYS.get(interval, 58)
+        start = (datetime.now(timezone.utc) - timedelta(days=window)).strftime("%Y-%m-%d")
+        print(f"Running {strategy.name} on {ticker} [{interval}]...")
+        df = fetch_ohlcv(ticker, start, END, interval)
         result = Backtester(strategy).run(df)
+        result["timeframe"] = interval
         strategy_results.append(result)
         asset_universe[result["id"]] = ticker
 

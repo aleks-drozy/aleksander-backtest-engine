@@ -33,6 +33,7 @@ class StrategyResult(BaseModel):
     name: str
     description: str
     direction: Literal["long_only", "short_only", "both"]
+    timeframe: str
     params: dict[str, float | int]
     in_sample: PeriodResult
     out_of_sample: PeriodResult
