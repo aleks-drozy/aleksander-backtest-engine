@@ -17,11 +17,12 @@ class IFVGCISDStrategy(Strategy):
     id = "IFVG_CISD"
     name = "IFVG + CISD"
     description = (
-        "Daily adaptation of the FYP strategy: requires both an Inverse Fair Value Gap "
-        "and a Change in State of Delivery to confirm before entering."
+        "Hourly adaptation of the FYP strategy: requires both a bullish Inverse Fair Value Gap "
+        "and a Change in State of Delivery (breakout above prior 20-bar high) to confirm. "
+        "Long-only to align with NQ's structural uptrend."
     )
-    direction = "both"
-    params = {"ifvg_lookback": 5, "cisd_window": 10}
+    direction = "long_only"
+    params = {"ifvg_lookback": 5, "cisd_window": 20}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         lb = self.params["ifvg_lookback"]

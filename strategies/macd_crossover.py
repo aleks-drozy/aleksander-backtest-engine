@@ -6,11 +6,12 @@ class MACDCrossoverStrategy(Strategy):
     id = "MACD_CROSSOVER"
     name = "MACD Crossover"
     description = (
-        "Long when MACD line crosses above the signal line; short when it crosses below. "
-        "Uses exponential moving averages (12/26/9) to capture momentum shifts."
+        "Long when MACD line crosses above the signal line; flat when it crosses below. "
+        "Uses 48/104/18 EMAs on 1h bars: fast ~2 days, slow ~2 weeks. "
+        "Long-only to align with NQ's structural upward bias."
     )
-    direction = "both"
-    params = {"fast": 12, "slow": 26, "signal": 9}
+    direction = "long_only"
+    params = {"fast": 48, "slow": 104, "signal": 18}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         close = df["Close"]

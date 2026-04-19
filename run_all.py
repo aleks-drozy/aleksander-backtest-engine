@@ -19,14 +19,15 @@ INTERVAL_WINDOW_DAYS = {"1h": 720, "30m": 58, "15m": 58}
 
 END = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-# (strategy, ticker, interval) — each strategy runs on its research-optimal timeframe
+# All strategies on 1h — 720 days of data gives a meaningful OOS window (~216 days)
+# Parameters have been rescaled for hourly bars throughout the strategy files
 REGISTRY = [
-    (SMACrossoverStrategy(),         "NQ=F", "1h"),   # trend-following needs clean trends
-    (RSIMeanReversionStrategy(),     "NQ=F", "30m"),  # sweet spot: active but lower noise
-    (IFVGCISDStrategy(),             "NQ=F", "15m"),  # ICT concepts native to 15m
-    (MACDCrossoverStrategy(),        "NQ=F", "1h"),   # profit factor 1.21 at 1h vs 1.14 at 30m
-    (BollingerMeanReversionStrategy(),"NQ=F","15m"),  # mean reversion viable at 15m
-    (MACDBollingerComboStrategy(),   "NQ=F", "15m"),  # dual confirmation handles 15m noise
+    (SMACrossoverStrategy(),          "NQ=F", "1h"),
+    (RSIMeanReversionStrategy(),      "NQ=F", "1h"),
+    (IFVGCISDStrategy(),              "NQ=F", "1h"),
+    (MACDCrossoverStrategy(),         "NQ=F", "1h"),
+    (BollingerMeanReversionStrategy(), "NQ=F", "1h"),
+    (MACDBollingerComboStrategy(),    "NQ=F", "1h"),
 ]
 
 
@@ -54,7 +55,7 @@ def main() -> None:
 
     out_path = Path("results/backtest_results.json")
     out_path.parent.mkdir(exist_ok=True)
-    out_path.write_text(validated.model_dump_json(indent=2))
+    out_path.write_text(validated.model_dump_json(indent=2), encoding="utf-8")
     print(f"Results written to {out_path}")
 
 

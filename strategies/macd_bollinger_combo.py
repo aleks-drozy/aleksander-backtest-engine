@@ -6,12 +6,12 @@ class MACDBollingerComboStrategy(Strategy):
     id = "MACD_BOLLINGER_COMBO"
     name = "MACD + Bollinger Combo"
     description = (
-        "Dual-confirmation strategy: enters long when price is below the lower Bollinger Band "
-        "AND MACD is bullish; short when price is above the upper band AND MACD is bearish. "
+        "Dual-confirmation dip-buyer: enters long when price is below the lower Bollinger Band "
+        "AND MACD is bullish. Long-only — both signals must confirm before buying NQ dips. "
         "Exits when price reverts to the middle band or MACD flips."
     )
-    direction = "both"
-    params = {"bb_period": 20, "std_dev": 2, "macd_fast": 12, "macd_slow": 26, "macd_signal": 9}
+    direction = "long_only"
+    params = {"bb_period": 20, "std_dev": 1.5, "macd_fast": 24, "macd_slow": 52, "macd_signal": 9}
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         close = df["Close"]

@@ -15,10 +15,10 @@ def test_sma_crossover_signals_valid_values():
     assert len(signals) == len(df)
 
 
-def test_sma_crossover_supports_both_directions():
+def test_sma_crossover_is_long_only():
     from strategies.sma_crossover import SMACrossoverStrategy
     s = SMACrossoverStrategy()
-    assert s.direction == "both"
+    assert s.direction == "long_only"
 
 
 def test_sma_crossover_golden_cross_produces_long():
@@ -81,10 +81,10 @@ def test_ifvg_cisd_signals_valid_values():
     assert len(signals) == len(df)
 
 
-def test_ifvg_cisd_supports_both_directions():
+def test_ifvg_cisd_is_long_only():
     from strategies.ifvg_cisd import IFVGCISDStrategy
     s = IFVGCISDStrategy()
-    assert s.direction == "both"
+    assert s.direction == "long_only"
 
 
 def test_ifvg_cisd_generates_some_signals_on_volatile_data():
