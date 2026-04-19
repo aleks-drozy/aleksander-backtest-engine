@@ -1,13 +1,11 @@
 import numpy as np
 import pandas as pd
 
-TRADING_DAYS = 252
-
-
 def compute_metrics(
     net_returns: pd.Series,
     positions: pd.Series,
     prices: pd.Series,
+    bars_per_year: int = 252,
 ) -> dict:
     equity = (1 + net_returns).cumprod()
 
@@ -16,7 +14,7 @@ def compute_metrics(
     sharpe = 0.0
     if net_returns.std() > 0:
         sharpe = round(
-            (net_returns.mean() / net_returns.std()) * np.sqrt(TRADING_DAYS), 2
+            (net_returns.mean() / net_returns.std()) * np.sqrt(bars_per_year), 2
         )
 
     rolling_max = equity.cummax()

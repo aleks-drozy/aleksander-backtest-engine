@@ -33,6 +33,12 @@ class Backtester:
 
         split_idx = int(len(df) * self.train_pct)
 
+        # Compute bars_per_year from actual data so Sharpe scales correctly
+        # for any timeframe (daily, hourly, etc.)
+        total_days = (df.index[-1] - df.index[0]).days
+        years = total_days / 365.25
+        bars_per_year = int(len(df) / years) if years > 0 else 252
+
         is_net = net.iloc[:split_idx]
         oos_net = net.iloc[split_idx:]
         is_pos = pos.iloc[:split_idx]
@@ -56,7 +62,7 @@ class Backtester:
                     "start": is_df.index[0].strftime("%Y-%m-%d"),
                     "end": is_df.index[-1].strftime("%Y-%m-%d"),
                 },
-                **compute_metrics(is_net, is_pos, is_prices),
+                **compute_metrics(is_net, is_pos, is_prices, bars_per_year),
                 "sampled": "weekly",
                 "equity_curve": sample_equity_weekly(is_equity),
             },
@@ -65,7 +71,7 @@ class Backtester:
                     "start": oos_df.index[0].strftime("%Y-%m-%d"),
                     "end": oos_df.index[-1].strftime("%Y-%m-%d"),
                 },
-                **compute_metrics(oos_net, oos_pos, oos_prices),
+                **compute_metrics(oos_net, oos_pos, oos_prices, bars_per_year),
                 "sampled": "weekly",
                 "equity_curve": sample_equity_weekly(oos_equity),
             },

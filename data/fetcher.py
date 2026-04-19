@@ -6,19 +6,19 @@ CACHE_DIR = Path(__file__).parent / "cache"
 MIN_ROWS = 100
 
 
-def fetch_ohlcv(ticker: str, start: str, end: str) -> pd.DataFrame:
+def fetch_ohlcv(ticker: str, start: str, end: str, interval: str = "1d") -> pd.DataFrame:
     CACHE_DIR.mkdir(exist_ok=True)
     safe_ticker = ticker.replace("=", "_").replace("/", "_")
-    cache_file = CACHE_DIR / f"{safe_ticker}_{start}_{end}.csv"
+    cache_file = CACHE_DIR / f"{safe_ticker}_{start}_{end}_{interval}.csv"
 
     if cache_file.exists():
         return pd.read_csv(cache_file, index_col=0, parse_dates=True)
 
-    df = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)
+    df = yf.download(ticker, start=start, end=end, interval=interval, auto_adjust=True, progress=False)
 
     if len(df) < MIN_ROWS:
         if ticker == "NQ=F":
-            return fetch_ohlcv("ES=F", start, end)
+            return fetch_ohlcv("ES=F", start, end, interval)
         raise ValueError(f"Insufficient data for {ticker}: {len(df)} rows fetched")
 
     # Flatten MultiIndex columns produced by yfinance >=0.2.38
