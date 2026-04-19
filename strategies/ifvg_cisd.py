@@ -23,6 +23,9 @@ class IFVGCISDStrategy(Strategy):
     )
     direction = "long_only"
     params = {"ifvg_lookback": 5, "cisd_window": 20}
+    # 1:2 R:R — win rate ~56% needs losers to be half the size of winners
+    sl_atr_mult = 1.0
+    tp_atr_mult = 2.0
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         lb = self.params["ifvg_lookback"]

@@ -12,6 +12,9 @@ class MACDBollingerComboStrategy(Strategy):
     )
     direction = "long_only"
     params = {"bb_period": 20, "std_dev": 1.5, "macd_fast": 24, "macd_slow": 52, "macd_signal": 9}
+    # 1:2.5 R:R — selective dual-confirmation entries justify holding for bigger targets
+    sl_atr_mult = 1.0
+    tp_atr_mult = 2.5
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         close = df["Close"]

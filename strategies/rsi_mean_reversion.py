@@ -13,6 +13,9 @@ class RSIMeanReversionStrategy(Strategy):
     )
     direction = "both"
     params = {"period": 14, "oversold": 35, "overbought": 65}
+    # Natural RSI threshold crossing IS the exit — stop only for catastrophic tail events
+    sl_atr_mult = 10.0
+    tp_atr_mult = None
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         rsi = self._rsi(df["Close"], self.params["period"])

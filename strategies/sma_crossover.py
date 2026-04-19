@@ -11,6 +11,9 @@ class SMACrossoverStrategy(Strategy):
     )
     direction = "long_only"
     params = {"fast": 50, "slow": 200}
+    # 2× ATR stop — enough room for NQ noise without holding through full reversals
+    sl_atr_mult = 2.0
+    tp_atr_mult = None
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         fast = df["Close"].rolling(self.params["fast"]).mean()

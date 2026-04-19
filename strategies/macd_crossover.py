@@ -12,6 +12,9 @@ class MACDCrossoverStrategy(Strategy):
     )
     direction = "long_only"
     params = {"fast": 48, "slow": 104, "signal": 18}
+    # 1:3 R:R — 2.5× ATR stop gives trades room; target is 3× ATR on confirmed moves
+    sl_atr_mult = 2.5
+    tp_atr_mult = 3.0
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         close = df["Close"]
