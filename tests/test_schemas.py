@@ -25,6 +25,7 @@ def _valid_strategy() -> dict:
         "name": "SMA Crossover",
         "description": "Goes long on golden cross.",
         "direction": "long_only",
+        "timeframe": "1h",
         "params": {"fast": 20, "slow": 50},
         "in_sample": _valid_period(),
         "out_of_sample": _valid_period(),
