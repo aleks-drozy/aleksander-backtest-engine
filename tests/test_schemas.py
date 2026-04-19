@@ -9,6 +9,8 @@ def _valid_period() -> dict:
         "metrics": {
             "total_return_pct": 25.4,
             "sharpe": 1.1,
+            "sortino": 1.6,
+            "calmar": 2.1,
             "max_drawdown_pct": -12.3,
             "win_rate_pct": 55.0,
             "profit_factor": 1.4,
@@ -36,6 +38,7 @@ def test_valid_backtest_results_parses():
     data = {
         "generated_at": "2026-04-18T12:00:00Z",
         "asset_universe": {"SMA_CROSSOVER": "SPY"},
+        "benchmark_return_pct": 12.5,
         "strategies": [_valid_strategy()],
     }
     result = BacktestResults(**data)

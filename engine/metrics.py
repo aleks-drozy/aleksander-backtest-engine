@@ -11,15 +11,31 @@ def compute_metrics(
 
     total_return_pct = round((equity.iloc[-1] - 1) * 100, 2)
 
+    # Sharpe — penalises all volatility (up and down)
     sharpe = 0.0
     if net_returns.std() > 0:
         sharpe = round(
             (net_returns.mean() / net_returns.std()) * np.sqrt(bars_per_year), 2
         )
 
+    # Sortino — penalises only downside volatility; more relevant for trading
+    sortino = 0.0
+    downside = net_returns[net_returns < 0]
+    downside_std = downside.std()
+    if downside_std > 0:
+        sortino = round(
+            (net_returns.mean() / downside_std) * np.sqrt(bars_per_year), 2
+        )
+
     rolling_max = equity.cummax()
     drawdown = (equity - rolling_max) / rolling_max
     max_drawdown_pct = round(float(drawdown.min()) * 100, 2)
+
+    # Calmar — annualised return divided by max drawdown (how hard the strategy works)
+    calmar = 0.0
+    if max_drawdown_pct < 0:
+        annualised_return = (equity.iloc[-1] ** (bars_per_year / len(net_returns)) - 1) * 100
+        calmar = round(annualised_return / abs(max_drawdown_pct), 2)
 
     trades = _extract_trades(positions, prices)
     num_trades = len(trades)
@@ -38,6 +54,8 @@ def compute_metrics(
         "metrics": {
             "total_return_pct": total_return_pct,
             "sharpe": sharpe,
+            "sortino": sortino,
+            "calmar": calmar,
             "max_drawdown_pct": max_drawdown_pct,
             "win_rate_pct": win_rate_pct,
             "profit_factor": profit_factor,
