@@ -1,9 +1,9 @@
-name: Run Backtest & Update Portfolio
+name: Run Backtest
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:   # manual re-run, e.g. when a push carried [skip ci]
+  workflow_dispatch:
 
 jobs:
   backtest:
@@ -13,16 +13,16 @@ jobs:
       - name: Checkout engine repo
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Get week number for cache key
         id: week
         run: echo "key=$(date +'%Y-%U')" >> $GITHUB_OUTPUT
 
-      - name: Restore yfinance CSV cache
+      - name: Restore data cache
         uses: actions/cache@v4
         with:
           path: data/cache
@@ -30,35 +30,17 @@ jobs:
           restore-keys: yfinance-data-
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt   # pulls in requirements.txt plus pytest
 
       - name: Run backtest engine
         run: python run_all.py
 
-      - name: Save yfinance CSV cache
+      - name: Run test suite
+        run: python -m pytest tests/ -q
+
+      - name: Save data cache
         uses: actions/cache/save@v4
         if: always()
         with:
           path: data/cache
           key: yfinance-data-${{ steps.week.outputs.key }}
-
-      - name: Checkout portfolio repo
-        uses: actions/checkout@v4
-        with:
-          repository: aleks-drozy/aleksandrs-portfolio
-          token: ${{ secrets.PORTFOLIO_PAT }}
-          path: portfolio
-
-      - name: Copy results to portfolio
-        run: |
-          mkdir -p portfolio/src/data
-          cp results/backtest_results.json portfolio/src/data/backtest_results.json
-
-      - name: Commit and push to portfolio
-        working-directory: portfolio
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/data/backtest_results.json
-          git diff --cached --quiet || git commit -m "chore: update backtest results [skip ci]"
-          git push origin master
