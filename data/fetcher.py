@@ -19,9 +19,9 @@ def fetch_ohlcv(ticker: str, start: str, end: str, interval: str = "1d") -> pd.D
 
     df = yf.download(ticker, start=start, end=end, interval=interval, auto_adjust=True, progress=False)
 
+    # Fail loudly — never substitute another instrument. A silent NQ=F -> ES=F
+    # fallback used to run here, publishing S&P data under a Nasdaq label.
     if len(df) < MIN_ROWS:
-        if ticker == "NQ=F":
-            return fetch_ohlcv("ES=F", start, end, interval)
         raise ValueError(f"Insufficient data for {ticker}: {len(df)} rows fetched")
 
     # Flatten MultiIndex columns produced by yfinance >=0.2.38

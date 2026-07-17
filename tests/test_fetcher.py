@@ -64,13 +64,20 @@ def test_cache_roundtrip_keeps_daily_index_tz_naive(tmp_path, monkeypatch):
     assert list(cached.index) == list(source.index)
 
 
-def test_fetch_ohlcv_falls_back_to_esf_when_nqf_empty(tmp_path, monkeypatch):
+def test_fetch_ohlcv_raises_on_insufficient_data_never_substitutes(tmp_path, monkeypatch):
+    """Insufficient data must raise — never silently swap in another instrument.
+
+    Regression: the fetcher used to fall back to ES=F when NQ=F came up short,
+    while run_all.py kept labelling the results NQ=F, so published numbers could
+    describe S&P data as Nasdaq. A failed fetch now fails the run instead.
+    """
     monkeypatch.setattr("data.fetcher.CACHE_DIR", tmp_path)
 
-    def side_effect(ticker, **kwargs):
-        return pd.DataFrame() if ticker == "NQ=F" else make_df(250)
-
-    with patch("yfinance.download", side_effect=side_effect):
+    with patch("yfinance.download", return_value=pd.DataFrame()) as mock_dl:
         from data.fetcher import fetch_ohlcv
-        df = fetch_ohlcv("NQ=F", "2018-01-01", "2025-12-31")
-    assert len(df) == 250
+        with pytest.raises(ValueError, match="NQ=F"):
+            fetch_ohlcv("NQ=F", "2018-01-01", "2025-12-31")
+
+    # Only the requested ticker was attempted, and nothing was cached.
+    assert mock_dl.call_count == 1
+    assert list(tmp_path.glob("*.parquet")) == []
