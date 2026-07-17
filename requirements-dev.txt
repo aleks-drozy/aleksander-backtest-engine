@@ -1,0 +1,3 @@
+# Test-only dependencies. CI installs this file; runtime installs requirements.txt.
+-r requirements.txt
+pytest==9.1.1

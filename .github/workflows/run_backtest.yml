@@ -44,7 +44,7 @@ jobs:
       - name: Checkout portfolio repo
         uses: actions/checkout@v4
         with:
-          repository: aleks-drozy/aleksander-portfolio
+          repository: aleks-drozy/aleksandrs-portfolio
           token: ${{ secrets.PORTFOLIO_PAT }}
           path: portfolio
 

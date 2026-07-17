@@ -9,10 +9,13 @@ MIN_ROWS = 100
 def fetch_ohlcv(ticker: str, start: str, end: str, interval: str = "1d") -> pd.DataFrame:
     CACHE_DIR.mkdir(exist_ok=True)
     safe_ticker = ticker.replace("=", "_").replace("/", "_")
-    cache_file = CACHE_DIR / f"{safe_ticker}_{start}_{end}_{interval}.csv"
+    # Parquet, not CSV: intraday bars are indexed in exchange-local time, so a window
+    # spanning a DST change holds mixed UTC offsets. CSV round-trips those through
+    # strings and pandas hands back a str Index; parquet keeps the tz in its schema.
+    cache_file = CACHE_DIR / f"{safe_ticker}_{start}_{end}_{interval}.parquet"
 
     if cache_file.exists():
-        return pd.read_csv(cache_file, index_col=0, parse_dates=True)
+        return pd.read_parquet(cache_file)
 
     df = yf.download(ticker, start=start, end=end, interval=interval, auto_adjust=True, progress=False)
 
@@ -25,5 +28,5 @@ def fetch_ohlcv(ticker: str, start: str, end: str, interval: str = "1d") -> pd.D
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
 
-    df.to_csv(cache_file)
+    df.to_parquet(cache_file)
     return df
