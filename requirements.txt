@@ -1,5 +1,9 @@
-pandas>=2.1
-numpy>=1.26
-yfinance>=0.2.40
-scipy>=1.11
-pydantic>=2.6
+# Pinned exactly: unpinned ranges let yfinance 1.4.0 land mid-May and silently
+# change the intraday index tz, which broke CI on a commit that touched nothing.
+# Bump deliberately, with the test suite as the gate.
+pandas==3.0.3
+numpy==2.4.6
+yfinance==1.5.1
+scipy==1.17.1
+pydantic==2.13.4
+pyarrow==25.0.0
