@@ -3,6 +3,7 @@ name: Run Backtest & Update Portfolio
 on:
   push:
     branches: [main]
+  workflow_dispatch:   # manual re-run, e.g. when a push carried [skip ci]
 
 jobs:
   backtest:
