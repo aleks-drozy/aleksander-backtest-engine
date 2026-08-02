@@ -5,13 +5,13 @@
 
 A vectorised Python backtesting engine that runs a library of nine trading strategies over intraday
 NASDAQ-100 futures data, scores each one on a risk-adjusted metrics suite, and validates every result
-against a typed schema — all wired to GitHub Actions CI.
+against a typed schema, all wired to GitHub Actions CI.
 
 Built as a clean, extensible harness for comparing strategies on the same footing: one engine, one
 metrics definition, one output contract, so results are comparable and reproducible rather than
 per-strategy bespoke.
 
-> Research and education only. Not financial advice and not a live trading system — no broker, no
+> Research and education only. Not financial advice and not a live trading system: no broker, no
 > order routing, no real capital.
 
 ## What it does
@@ -42,10 +42,10 @@ Nine strategies, each a self-contained module implementing a common `BaseStrateg
 
 Beyond total return, the engine reports a risk-adjusted suite (`engine/metrics.py`):
 
-- **Sharpe** — penalises all volatility.
-- **Sortino** — penalises only downside volatility.
-- **Max drawdown** and **Calmar** — annualised return per unit of drawdown.
-- **Probabilistic Sharpe Ratio** (Bailey & López de Prado, 2014) — the probability the true Sharpe
+- **Sharpe**: penalises all volatility.
+- **Sortino**: penalises only downside volatility.
+- **Max drawdown** and **Calmar**: annualised return per unit of drawdown.
+- **Probabilistic Sharpe Ratio** (Bailey & López de Prado, 2014): the probability the true Sharpe
   exceeds zero given the observed sample, adjusted for the non-normality of returns. It answers "how
   much confidence does this sample size actually earn?" rather than trusting a point estimate.
 
